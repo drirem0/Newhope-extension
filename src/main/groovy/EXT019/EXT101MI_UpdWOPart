@@ -28,13 +28,13 @@
  import java.time.LocalDateTime;
  import java.time.format.DateTimeFormatter;
  import java.time.ZoneId;
- 
+
  
  /*
  *Modification area - M3
  *Nbr               Date      User id     Description
  *EXT019            20230322  WZHAO       Work Order Integrated with Parts Portal 
- *
+ *                                        
  */
  
   /*
@@ -58,7 +58,8 @@ public class UpdWOPart extends ExtendM3Transaction {
   private String pupr;
   private String ltyp;
   private String fuds;
-  
+  private String zzdt;
+  private String pop2;
   
   private int XXCONO;
   private int currentDate;
@@ -115,6 +116,14 @@ public class UpdWOPart extends ExtendM3Transaction {
   	if (fuds == "?") {
   	  fuds = "";
   	} 
+  	zzdt = mi.inData.get("ZZDT") == null ? '' : mi.inData.get("ZZDT").trim();
+  	if (zzdt == "?") {
+  	  zzdt = "";
+  	} 
+  	pop2 = mi.inData.get("POP2") == null ? '' : mi.inData.get("POP2").trim();
+  	if (pop2 == "?") {
+  	  pop2 = "";
+  	} 
     if (!validateInput()) {
       return;
     }
@@ -170,6 +179,12 @@ public class UpdWOPart extends ExtendM3Transaction {
   	  mi.error("Work order must be entered");
   	  return false;
   	}
+  	if (!zzdt.isEmpty()) {
+  	  if(zzdt.length() != 8 ){
+  	    mi.error("Date length must be 8");
+  	    return false;
+  	  }
+    }
   	DBAction queryMMOHED = database.table("MMOHED").index("00").selection("QHWHST").build();
     DBContainer MMOHED = queryMMOHED.getContainer();
     MMOHED.set("QHCONO", XXCONO);
@@ -182,6 +197,8 @@ public class UpdWOPart extends ExtendM3Transaction {
     }
     return true;
   }
+  
+  
   /*
    * updateEXTMAT - Callback function to update EXTMAT table
    *
@@ -205,9 +222,13 @@ public class UpdWOPart extends ExtendM3Transaction {
     if (!fuds.isEmpty()) {
       EXTMAT.set("EXFUDS", fuds);
     }
+    if (!zzdt.isEmpty()) {
+      EXTMAT.set("EXZZDT", zzdt.toInteger());
+    }
   	EXTMAT.set("EXLMDT", currentDate);
   	EXTMAT.set("EXCHNO", EXTMAT.get("EXCHNO").toString().toInteger() +1);
   	EXTMAT.set("EXCHID", program.getUser());
+  	EXTMAT.set("EXPOP2", pop2);
     EXTMAT.update();
    
   }
