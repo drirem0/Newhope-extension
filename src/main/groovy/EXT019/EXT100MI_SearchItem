@@ -335,7 +335,7 @@ public class SearchItem extends ExtendM3Transaction {
         itty = MITMAS.get("MMITTY").toString().trim();
       }
       
-		String stqt = "";
+		  String stqt = "";
     	String alqt = "";
     	aval = "";
     	suno_MITBAL = "";
@@ -343,8 +343,10 @@ public class SearchItem extends ExtendM3Transaction {
     	String reop = "";
     	String mxst = "";
     	String orqt = "";
-        String leat = "";
-    	DBAction queryMITBAL = database.table("MITBAL").index("00").selection("MBSTQT", "MBALQT", "MBSUNO", "MBWHSL", "MBREOP", "MBMXST", "MBORQT","MBLEAT").build();
+      String leat = "";
+      String mitbalWHLO = "";
+        
+    	DBAction queryMITBAL = database.table("MITBAL").index("00").selection("MBSTQT", "MBALQT", "MBSUNO", "MBWHSL", "MBREOP", "MBMXST", "MBORQT","MBLEAT", "MBWHLO").build();
       DBContainer MITBAL = queryMITBAL.getContainer();
       MITBAL.set("MBCONO", XXCONO);
       MITBAL.set("MBWHLO", whlo);
@@ -359,6 +361,7 @@ public class SearchItem extends ExtendM3Transaction {
         mxst = MITBAL.get("MBMXST").toString().trim();
         orqt = MITBAL.get("MBORQT").toString().trim();
         leat = MITBAL.get("MBLEAT").toString().trim();
+        mitbalWHLO = MITBAL.get("MBWHLO").toString().trim()
         if(leat == null || leat == "" || leat == "0"){
           leat = "1";
         }
@@ -446,7 +449,7 @@ public class SearchItem extends ExtendM3Transaction {
           }
         }
      
-      def map = [ITNO: itno, ITDS: itds, FUDS: fuds, UNMS: unms, STCD: stcd, AVAL: aval, WHSL: whsl, REOP: reop, MXST: mxst, ORQT: orqt, POPN: popn, PLDT: pldt, SUNO: suno, PUPR: pupr, PPUN: ppun, ITTY: itty, LEAT: leat, WDNO: wdno, LEDT: ledt, WHLO: whlo];
+      def map = [ITNO: itno, ITDS: itds, FUDS: fuds, UNMS: unms, STCD: stcd, AVAL: aval, WHSL: whsl, REOP: reop, MXST: mxst, ORQT: orqt, POPN: popn, PLDT: pldt, SUNO: suno, PUPR: pupr, PPUN: ppun, ITTY: itty, LEAT: leat, WDNO: wdno, LEDT: ledt, WHLO: mitbalWHLO];
       lstValidItems.add(map);
     }
   }
