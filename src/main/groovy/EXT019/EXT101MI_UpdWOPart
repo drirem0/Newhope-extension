@@ -191,17 +191,20 @@ public class UpdWOPart extends ExtendM3Transaction {
   	  return false;
   	}
     if (!zzdt.isEmpty()) {
-	   if(zzdt.length() != 8 ){
-		 mi.error("Date length must be 8");
-		 return false;
-	   }
-	
-		 parsedDate = yyyMMddFormat.parse(zzdt);
-		 if(parsedDate == null){
-		   mi.error("Incorrect date format yyyyMMdd");
-		   return false;
-	   }  
-   }
+			if(zzdt.length() != 8 ){
+				mi.error("Date length must be 8");
+				return false;
+			}
+
+			try{
+				parsedDate = yyyMMddFormat.parse(zzdt);
+			} finally {
+				if(parsedDate == null){
+  				mi.error("Incorrect date format yyyyMMdd");
+  				return false;
+  				}  
+			}
+		}
   	DBAction queryMMOHED = database.table("MMOHED").index("00").selection("QHWHST").build();
     DBContainer MMOHED = queryMMOHED.getContainer();
     MMOHED.set("QHCONO", XXCONO);
