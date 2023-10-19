@@ -78,12 +78,15 @@
   	}
   	pnli = mi.inData.get("PNLI") == null ? '' : mi.inData.get("PNLI").trim();
   	if (pnli == "?") {
-  	  pnli = "";
+  	  pnli = "0";
   	}
   	pnls = mi.inData.get("PNLS") == null ? '' : mi.inData.get("PNLS").trim();
   	if (pnls == "?") {
-  	  pnls = "";
+  	  pnls = "0";
   	}
+  	
+  	if (pnli.isEmpty()) { pnli = "0";  }
+  	if (pnls.isEmpty()) { pnls = "0";  }
 
   	// Validate input fields
   	if (puno.isEmpty()) {

@@ -81,12 +81,16 @@
     }
   	pnli = mi.inData.get("PNLI") == null ? '' : mi.inData.get("PNLI").trim();
   	if (pnli == "?") {
-  	  pnli = "";
+  	  pnli = "0";
   	}
   	pnls = mi.inData.get("PNLS") == null ? '' : mi.inData.get("PNLS").trim();
   	if (pnls == "?") {
-  	  pnls = "";
+  	  pnls = "0";
   	}
+  	
+   	if (pnli.isEmpty()) { pnli = "0";  }
+  	if (pnls.isEmpty()) { pnls = "0";  } 	
+  	
     XXCONO = (Integer)program.LDAZD.CONO;
     
     DBAction query = database.table("EXTAPR").index("00").selection("EXCONO", "EXPUNO", "EXPNLI", "EXPNLS", "EXAPPR", "EXASTS", "EXSUNO", "EXORTY", "EXPUPR", "EXUSID", "EXCHNO", "EXORQA", "EXLNAM").build();
