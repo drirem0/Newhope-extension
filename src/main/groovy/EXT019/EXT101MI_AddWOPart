@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
+import java.text.SimpleDateFormat;
 
 /*
 *Modification area - M3
@@ -66,6 +67,11 @@ public class AddWOPart extends ExtendM3Transaction {
  private String zzdt; 
  private String itty; 
  private String pop2;
+ private String txid;
+ private String ztxt;
+ 
+ private SimpleDateFormat yyyMMddFormat = new SimpleDateFormat("yyyyMMdd");
+ private String parsedDate;
  
  private int XXCONO;
  private int currentDate;
@@ -84,7 +90,7 @@ public class AddWOPart extends ExtendM3Transaction {
  
  public void main() {
    //Fetch input fields from MI
-   cono = mi.inData.get("CONO") == null ? '' : mi.inData.get("CONO").trim();
+	 cono = mi.inData.get("CONO") == null ? '' : mi.inData.get("CONO").trim();
 	 if (cono == "?") {
 	   cono = "";
 	 } 
@@ -120,7 +126,7 @@ public class AddWOPart extends ExtendM3Transaction {
 	 if (suno == "?") {
 	   suno = "";
 	 } 
-	whlo = mi.inData.get("WHLO") == null ? '' : mi.inData.get("WHLO").trim();
+	  whlo = mi.inData.get("WHLO") == null ? '' : mi.inData.get("WHLO").trim();
 	 if (whlo == "?") {
 	   whlo = "";
 	 } 
@@ -152,6 +158,14 @@ public class AddWOPart extends ExtendM3Transaction {
 	 if (pop2 == "?") {
 	   pop2 = "";
 	 } 
+	 txid = mi.inData.get("TXID") == null ? '' : mi.inData.get("TXID").trim();
+	 if (txid == "?") {
+	   txid = "";
+	 } 
+	 ztxt = mi.inData.get("ZTXT") == null ? '' : mi.inData.get("ZTXT").trim();
+	 if (ztxt == "?") {
+	   ztxt = "";
+	 } 
    if (!validateInput()) {
 	 return;
    }
@@ -163,10 +177,10 @@ public class AddWOPart extends ExtendM3Transaction {
    popn = "";
    DBAction queryMITPOP = database.table("MITPOP").index("00").selection("MPPOPN").build();
    DBContainer MITPOP = queryMITPOP.getContainer();
-   MITPOP.set("MPCONO", XXCONO);
-   MITPOP.set("MPALWT", 5);
-   MITPOP.set("MPALWQ", "");
-   MITPOP.set("MPITNO", mtno);
+	 MITPOP.set("MPCONO", XXCONO);
+	 MITPOP.set("MPALWT", 5);
+	 MITPOP.set("MPALWQ", "");
+	 MITPOP.set("MPITNO", mtno);
 	 queryMITPOP.readAll(MITPOP, 4, 1, listMITPOP);
 	 
 	 String stqt = "";
@@ -330,14 +344,12 @@ public class AddWOPart extends ExtendM3Transaction {
 		 mi.error("Date length must be 8");
 		 return false;
 	   }
-	   DBAction queryCSYCAL = database.table("CSYCAL").index("00").selection("CDYMD8").build();
-	 DBContainer CSYCAL = queryCSYCAL.getContainer();
-	 CSYCAL.set("CDCONO", XXCONO);
-	 CSYCAL.set("CDYMD8", zzdt);
-	   if (!queryCSYCAL.read(CSYCAL)) {
-	   mi.error("Date is invalid. yyyyMMdd");
-	   return false;
-	 }
+	
+		 parsedDate = yyyMMddFormat.parse(zzdt);
+		 if(parsedDate == null){
+		   mi.error("Incorrect date format yyyyMMdd");
+		   return false;
+	   }  
    }
    return true;
    }
@@ -413,6 +425,12 @@ public class AddWOPart extends ExtendM3Transaction {
 	   }
 	   EXTMAT.set("EXITTY", itty);
 	   EXTMAT.set("EXPOP2", pop2);
+	   if(txid != ""){
+		 EXTMAT.set("EXTXID", txid.toInteger());  
+	   }else{
+		 EXTMAT.set("EXTXID", 0);  
+	   }
+	   EXTMAT.set("EXZTXT", ztxt);
 	   actionEXTMAT.insert(EXTMAT, recordExists);
    }
    /*
