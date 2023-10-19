@@ -120,9 +120,9 @@ public class SearchItem extends ExtendM3Transaction {
       if (wild.toInteger() == 1) {
         sqry = "STAT:[20 TO 50] (ITDS:*" + sstr + "* OR ITNO:*" + sstr + "*)";
       } else {
-        sqry = "STAT:[20 TO 50] ITDS:" + sstr + "* OR ITNO:" + sstr + ")";
+        sqry = "STAT:[20 TO 50] (ITDS:" + sstr + "* OR ITNO:" + sstr + ")";
       }
-      def  params = [ "SQRY": sqry]; 
+      def params = [ "SQRY": sqry]; 
       def callback = {
         Map<String, String> response ->
         if (response.ITNO != null) {
@@ -299,8 +299,10 @@ public class SearchItem extends ExtendM3Transaction {
   	  mi.error("Search string must be entered.");
   	  return false;
   	} else if (sstr.length() < 3) {
-  	  mi.error("Search string must have the minimun 3 characters.");
-  	  return false;
+  	  if(type.toInteger() != 3){
+  	    mi.error("Search string must have the minimun 3 characters.");
+  	    return false;
+  	  } 
   	}
   	if (wild.isEmpty()) {
   	  wild = "0";
@@ -382,7 +384,7 @@ public class SearchItem extends ExtendM3Transaction {
   	  MITPLO.set("MOCONO", XXCONO);
   	  MITPLO.set("MOWHLO", whlo);
   	  MITPLO.set("MOITNO", itno);
-    	queryMITPLO.readAll(MITPLO, 3, listMITPLO);
+    	queryMITPLO.readAll(MITPLO, 3, 999, listMITPLO);
   	  
   	  String suno = "";
       String pupr = "";
@@ -398,7 +400,7 @@ public class SearchItem extends ExtendM3Transaction {
         DBContainer MITVEN = queryMITVEN.getContainer();
         MITVEN.set("IFCONO", XXCONO);
         MITVEN.set("IFITNO", itno);
-        queryMITVEN.readAll(MITVEN, 2, 99, listMITVEN);
+        queryMITVEN.readAll(MITVEN, 2, 999, listMITVEN);
         if (lstMITVEN.size() == 1) {
           Map<String, String> record1 = (Map<String, String>) lstMITVEN[0];
           suno = record1.SUNO;
