@@ -91,11 +91,11 @@ public class Add extends ExtendM3Transaction {
   	} 
   	pnli = mi.inData.get("PNLI") == null ? '' : mi.inData.get("PNLI").trim();
   	if (pnli == "?") {
-  	  pnli = "";
+  	  pnli = "0";
   	} 
   	pnls = mi.inData.get("PNLS") == null ? '' : mi.inData.get("PNLS").trim();
   	if (pnls == "?") {
-  	  pnls = "";
+  	  pnls = "0";
   	} 
   	appr = mi.inData.get("APPR") == null ? '' : mi.inData.get("APPR").trim();
   	if (appr == "?") {
@@ -130,6 +130,12 @@ public class Add extends ExtendM3Transaction {
   	  lnam = "0";
   	}
   	
+  	if (pnli.isEmpty()) { pnli = "0";  }
+  	if (pnls.isEmpty()) { pnls = "0";  }
+  	if (pupr.isEmpty()) { pupr = "0";  }
+  	if (orqa.isEmpty()) { orqa = "0";  }
+  	if (lnam.isEmpty()) { lnam = "0";  }
+
 		XXCONO = (Integer)program.LDAZD.CONO;
 
     // Validate input fields  	
@@ -141,8 +147,6 @@ public class Add extends ExtendM3Transaction {
       mi.error("Authorisation status must be entered");
       return;
     }
-    
-    
     
     // - validate puno
     if (!puno.isEmpty()) {
@@ -161,8 +165,7 @@ public class Add extends ExtendM3Transaction {
       MPOPLP.set("POPLPN", puno.toInteger());
       MPOPLP.set("POPLPS", pnli.toInteger());
       MPOPLP.set("POPLP2", pnls.toInteger());
-      queryMPOPLP.readAll(MPOPLP, 2, 1, lstMPOPLP);
-      //queryMPOPLP.read(MPOPLP);
+      queryMPOPLP.readAll(MPOPLP, 4, 1, lstMPOPLP);
       if (!found) {
         mi.error("PO line number or Proposal number invalid");
         return;
@@ -223,7 +226,7 @@ public class Add extends ExtendM3Transaction {
     writeEXTAPR(puno, appr, asts);
   }
   /**
-  * Write Purchase Authorisation extension table EXTAPR
+  * writeEXTAPR - Write Purchase Authorisation extension table EXTAPR
   *
   */
   def writeEXTAPR(String puno, String appr, String asts) {
@@ -260,7 +263,11 @@ public class Add extends ExtendM3Transaction {
 	  mi.error("Record already exists");
   }
   
-   Closure<?> lstMPOPLP = { DBContainer MPOPLP ->
+  /**
+   * lstMPOPLP - Callback function to verify whether MPOPLP transaction found
+   *
+  */
+  Closure<?> lstMPOPLP = { DBContainer MPOPLP ->
     found = true;
   }
   

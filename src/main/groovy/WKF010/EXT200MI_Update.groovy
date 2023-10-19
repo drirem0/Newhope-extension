@@ -37,6 +37,7 @@
  *Nbr               Date      User id     Description
  *ABF_R_200         20220405  RDRIESSEN   Mods BF0200- Update EXTAPR records as a basis for PO authorization process
  *ABF_R_200         20220511  KVERCO      Update for XtendM3 review feedback
+ *WKF009            20231019  KVERCO      Update latest version for XtendM3 review feedback
  *
  */
 
@@ -85,11 +86,11 @@
   	} 
   	pnli = mi.inData.get("PNLI") == null ? '' : mi.inData.get("PNLI").trim();
   	if (pnli == "?") {
-  	  pnli = "";
+  	  pnli = "0";
   	} 
   	pnls = mi.inData.get("PNLS") == null ? '' : mi.inData.get("PNLS").trim();
   	if (pnls == "?") {
-  	  pnls = "";
+  	  pnls = "0";
   	} 
   	asts = mi.inData.get("ASTS") == null ? '' : mi.inData.get("ASTS").trim();
   	if (asts == "?") {
@@ -109,16 +110,20 @@
   	} 
   	pupr = mi.inData.get("PUPR") == null ? '' : mi.inData.get("PUPR").trim();
   	if (pupr == "?") {
-  	  pupr = "";
+  	  pupr = "0";
   	} 
   	orqa = mi.inData.get("ORQA") == null ? '' : mi.inData.get("ORQA").trim();
   	if (orqa == "?") {
-  	  orqa = "";
+  	  orqa = "0";
   	} 
   	lnam = mi.inData.get("LNAM") == null ? '' : mi.inData.get("LNAM").trim();
   	if (lnam == "?") {
-  	  lnam = "";
-  	} 
+  	  lnam = "0";
+  	}
+  	
+  	if (pnli.isEmpty()) { pnli = "0";  }
+  	if (pnls.isEmpty()) { pnls = "0";  }
+  	
 		XXCONO = (Integer)program.LDAZD.CONO;
 	
   	if (puno.isEmpty()) {
@@ -142,7 +147,7 @@
         MPOPLP.set("POPLPN", puno.toInteger());
         MPOPLP.set("POPLPS", pnli.toInteger());
         MPOPLP.set("POPLP2", pnls.toInteger());
-        queryMPOPLP.readAll(MPOPLP, 2, 1, lstMPOPLP);  	    
+        queryMPOPLP.readAll(MPOPLP, 4, 1, lstMPOPLP);  	    
         if (!found) {
           mi.error("PO number or Proposal number invalid");
           return;
@@ -204,23 +209,29 @@
   }
   
   /**
-   * updateCallBack - Callback function to update EXTAPR table
+   * lstMPOPLP - Callback function to verify whether MPOPLP transaction found
    *
    */
-   
    
     Closure<?> lstMPOPLP = { DBContainer MPOPLP ->
     found = true;
   }
    
-   
+  /**
+   * updateCallBack - Callback function to update EXTAPR table
+   *
+   */   
   Closure<?> updateCallBack = { LockedResult lockedResult ->
     
     ZoneId zid = ZoneId.of("Australia/Sydney"); 
     int currentDate = LocalDate.now(zid).format(DateTimeFormatter.ofPattern("yyyyMMdd")).toInteger();
     
-    lockedResult.set("EXASTS", asts);
-    lockedResult.set("EXAPPR", appr);
+    if (!asts.isEmpty()) {
+      lockedResult.set("EXASTS", asts);
+    }
+    if (!appr.isEmpty()) {
+      lockedResult.set("EXAPPR", appr);
+    }
     if (!suno.isEmpty()) {
       lockedResult.set("EXSUNO", suno);
     }
@@ -240,7 +251,6 @@
     lockedResult.set("EXCHID", program.getUser());
     lockedResult.set("EXLMDT", currentDate);
     lockedResult.update();
-  
   
   }
 }

@@ -11,11 +11,7 @@
  import java.text.DecimalFormat;
  import java.time.ZoneId;
  
-/**
-  * ProcessVariance - Check for any variance lines in EXTVAR and recode accounting string
-  *
- */
-public class ProcessVariance extends ExtendM3Transaction {
+ public class ProcessVariance extends ExtendM3Transaction {
   private final MIAPI mi;
   private final IonAPI ion;
   private final LoggerAPI logger;
@@ -55,14 +51,14 @@ public class ProcessVariance extends ExtendM3Transaction {
     currentTime = Integer.valueOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HHmmss")));
     
 
-    DBAction queryEXTVAR = database.table("EXTVAR").index("10").selectAllFields().build();
+    DBAction queryEXTVAR = database.table("EXTVAR").index("10").selection("EXDIVI", "EXYEA4", "EXJRNO", "EXJSNO", "EXPROC", "EXCHNO").build();
     DBContainer EXTVAR = queryEXTVAR.getContainer();
   	EXTVAR.set("EXCONO", XXCONO);
   	EXTVAR.set("EXPROC", 0);
-  	queryEXTVAR.readAll(EXTVAR, 2, listEXTVAR);
+  	queryEXTVAR.readAll(EXTVAR, 2, 20, listEXTVAR);
   	
   }
-\
+
   /**
   * listEXTVAR - Callback function to return EXTVAR
   *
@@ -74,7 +70,7 @@ public class ProcessVariance extends ExtendM3Transaction {
     String jrno = EXTVAR.get("EXJRNO").toString().trim();
     String jsno = EXTVAR.get("EXJSNO").toString().trim();
     
-    DBAction queryFGLEDG = database.table("FGLEDG").index("00").selectAllFields().build();
+    DBAction queryFGLEDG = database.table("FGLEDG").index("00").selection("EGDIVI", "EGYEA4", "EGJRNO", "EGJSNO", "EGVONO", "EGVSER", "EGAIT1", "EGAIT2", "EGAIT3", "EGAIT4", "EGAIT5", "EGAIT6", "EGAIT7", "EGACAM", "EGACQT", "EGVTCD", "EGACDT", "EGVTXT").build();
     DBContainer FGLEDG = queryFGLEDG.getContainer();
     FGLEDG.set("EGCONO", XXCONO);
     FGLEDG.set("EGDIVI", divi);
@@ -107,8 +103,8 @@ public class ProcessVariance extends ExtendM3Transaction {
    *
   */
   def recodingVariance(DBContainer FGLEDG) {  
-    String jrno_FPLEDG = "";
-    String jsno_FPLEDG = "";
+    String jrnoFPLEDG = "";
+    String jsnoFPLEDG = "";
     
     String divi = FGLEDG.get("EGDIVI").toString().trim();
     String yea4 = FGLEDG.get("EGYEA4").toString().trim();
@@ -136,20 +132,20 @@ public class ProcessVariance extends ExtendM3Transaction {
       Map<String, String> response ->
       
       if(response.TRCD != null && response.TRCD.equals("40")) {
-        jrno_FPLEDG = response.JRNO.trim();
-        jsno_FPLEDG = response.JSNO.trim();
+        jrnoFPLEDG = response.JRNO.trim();
+        jsnoFPLEDG = response.JSNO.trim();
       }
     }
 
     miCaller.call("GLS200MI", "LstVoucherLines", params, GLS200MIcallback);
     
-    DBAction queryFPLEDG = database.table("FPLEDG").index("00").selectAllFields().build();
+    DBAction queryFPLEDG = database.table("FPLEDG").index("00").selection("EPSUNO", "EPSPYN", "EPSINO", "EPINYR").build();
     DBContainer FPLEDG = queryFPLEDG.getContainer();
     FPLEDG.set("EPCONO", XXCONO);
     FPLEDG.set("EPDIVI", divi);
     FPLEDG.set("EPYEA4", yea4.toInteger());
-    FPLEDG.set("EPJRNO", jrno_FPLEDG.toInteger());
-    FPLEDG.set("EPJSNO", jsno_FPLEDG.toInteger());
+    FPLEDG.set("EPJRNO", jrnoFPLEDG.toInteger());
+    FPLEDG.set("EPJSNO", jsnoFPLEDG.toInteger());
     
     if (!queryFPLEDG.read(FPLEDG)) {
       PROC = "";
@@ -227,13 +223,13 @@ public class ProcessVariance extends ExtendM3Transaction {
     CACCST.set("SCEVEN", "PP10");
     CACCST.set("SCACTY", "903");
     
-    String ait1_CACCST = "";
-    String ait2_CACCST = "";
-    String ait3_CACCST = "";
-    String ait4_CACCST = "";
-    String ait5_CACCST = "";
-    String ait6_CACCST = "";
-    String ait7_CACCST = "";
+    String ait1CACCST = "";
+    String ait2CACCST = "";
+    String ait3CACCST = "";
+    String ait4CACCST = "";
+    String ait5CACCST = "";
+    String ait6CACCST = "";
+    String ait7CACCST = "";
     
     if (!queryCACCST.read(CACCST)) {
 
@@ -251,73 +247,73 @@ public class ProcessVariance extends ExtendM3Transaction {
         logger.debug("PO Line not found in MPLINE - " + puno + "/" + pnli + "/" + pnls);
         return;
       } 
-      String potc_MPLINE = MPLINE.get("IBPOTC").toString().trim();
-      String rorc_MPLINE = MPLINE.get("IBRORC").toString().trim();
-      String rorn_MPLINE = MPLINE.get("IBRORN").toString().trim();
-      String rorl_MPLINE = MPLINE.get("IBRORL").toString().trim();
-      String faci_MPLINE = MPLINE.get("IBFACI").toString().trim();
-      String rgdt_MPLINE = MPLINE.get("IBRGDT").toString().trim();
-      String itno_MPLINE = MPLINE.get("IBITNO").toString().trim();
-      String DD = rgdt_MPLINE.substring(6,8);
-      String MM = rgdt_MPLINE.substring(4,6);
-      String YY = rgdt_MPLINE.substring(2,4);
+      String potcMPLINE = MPLINE.get("IBPOTC").toString().trim();
+      String rorcMPLINE = MPLINE.get("IBRORC").toString().trim();
+      String rornMPLINE = MPLINE.get("IBRORN").toString().trim();
+      String rorlMPLINE = MPLINE.get("IBRORL").toString().trim();
+      String faciMPLINE = MPLINE.get("IBFACI").toString().trim();
+      String rgdtMPLINE = MPLINE.get("IBRGDT").toString().trim();
+      String itnoMPLINE = MPLINE.get("IBITNO").toString().trim();
+      String DD = rgdtMPLINE.substring(6,8);
+      String MM = rgdtMPLINE.substring(4,6);
+      String YY = rgdtMPLINE.substring(2,4);
       String rgdtDDMMYY = "${DD}${MM}${YY}";
 
       //Check if PO Line comes from a Repair or Subcontract Work Order - accounting event MO20-920
-      if (rorc_MPLINE.equals("6") && (potc_MPLINE.equals("60") || potc_MPLINE.equals("70"))) {
-        Map<String, String> rsAccounts = getRepSubWorkOrderAccounts(cono,divi,rgdtDDMMYY,itno_MPLINE,rorn_MPLINE,rorl_MPLINE,faci_MPLINE,"0");
-        ait1_CACCST = rsAccounts.get("AIT1").trim();
-        ait2_CACCST = rsAccounts.get("AIT2").trim();
-        ait3_CACCST = rsAccounts.get("AIT3").trim();
-        ait4_CACCST = rsAccounts.get("AIT4").trim();
-        ait5_CACCST = rsAccounts.get("AIT5").trim();
-        ait6_CACCST = rsAccounts.get("AIT6").trim();
-        ait7_CACCST = rsAccounts.get("AIT7").trim();
-        logger.debug("Repair or Subcontract - ait1=" + ait1_CACCST + " ait2=" + ait2_CACCST);
+      if (rorcMPLINE.equals("6") && (potcMPLINE.equals("60") || potcMPLINE.equals("70"))) {
+        Map<String, String> rsAccounts = getRepSubWorkOrderAccounts(cono,divi,rgdtDDMMYY,itnoMPLINE,rornMPLINE,rorlMPLINE,faciMPLINE,"0");
+        ait1CACCST = rsAccounts.get("AIT1").trim();
+        ait2CACCST = rsAccounts.get("AIT2").trim();
+        ait3CACCST = rsAccounts.get("AIT3").trim();
+        ait4CACCST = rsAccounts.get("AIT4").trim();
+        ait5CACCST = rsAccounts.get("AIT5").trim();
+        ait6CACCST = rsAccounts.get("AIT6").trim();
+        ait7CACCST = rsAccounts.get("AIT7").trim();
+        logger.debug("Repair or Subcontract - ait1=" + ait1CACCST + " ait2=" + ait2CACCST);
       } 
       else {
         //Check if PO Line comes from a Normal Work Order - accounting event MO10-912
-        if (rorc_MPLINE.equals("6") && !(potc_MPLINE.equals("60") || potc_MPLINE.equals("70"))) {
-          Map<String, String> woAccounts = getWorkOrderAccounts(cono,divi,rgdtDDMMYY,itno_MPLINE,rorn_MPLINE,rorl_MPLINE);
-          ait1_CACCST = woAccounts.get("AIT1").trim();
-          ait2_CACCST = woAccounts.get("AIT2").trim();
-          ait3_CACCST = woAccounts.get("AIT3").trim();
-          ait4_CACCST = woAccounts.get("AIT4").trim();
-          ait5_CACCST = woAccounts.get("AIT5").trim();
-          ait6_CACCST = woAccounts.get("AIT6").trim();
-          ait7_CACCST = woAccounts.get("AIT7").trim();
-          logger.debug("Work Order - ait1=" + ait1_CACCST + " ait2=" + ait2_CACCST);
+        if (rorcMPLINE.equals("6") && !(potcMPLINE.equals("60") || potcMPLINE.equals("70"))) {
+          Map<String, String> woAccounts = getWorkOrderAccounts(cono,divi,rgdtDDMMYY,itnoMPLINE,rornMPLINE,rorlMPLINE);
+          ait1CACCST = woAccounts.get("AIT1").trim();
+          ait2CACCST = woAccounts.get("AIT2").trim();
+          ait3CACCST = woAccounts.get("AIT3").trim();
+          ait4CACCST = woAccounts.get("AIT4").trim();
+          ait5CACCST = woAccounts.get("AIT5").trim();
+          ait6CACCST = woAccounts.get("AIT6").trim();
+          ait7CACCST = woAccounts.get("AIT7").trim();
+          logger.debug("Work Order - ait1=" + ait1CACCST + " ait2=" + ait2CACCST);
         }
         else {
         //Check if PO Line is for an Inventory accounted item
           DBAction queryMITMAS = database.table("MITMAS").index("00").selection("MMSTCD").build();
           DBContainer MITMAS = queryMITMAS.getContainer();
           MITMAS.set("MMCONO", XXCONO);
-          MITMAS.set("MMITNO", itno_MPLINE.trim());   
+          MITMAS.set("MMITNO", itnoMPLINE.trim());   
           if (!queryMITMAS.read(MITMAS)) {
             PROC = "";
             updateProcessFlag(divi, yea4, jrno, jsno, "2");
-            logger.debug("MITMAS not found for item" + itno_MPLINE.trim());
+            logger.debug("MITMAS not found for item" + itnoMPLINE.trim());
             return;
           } 
           else {
-            String stcd_MITMAS = MITMAS.get("MMSTCD").toString().trim();
-            if (stcd_MITMAS.equals("1")) {
+            String stcdMITMAS = MITMAS.get("MMSTCD").toString().trim();
+            if (stcdMITMAS.equals("1")) {
             logger.debug("Pre IPS call ${cono}");
               Map<String, String> inAccounts = getInventoryAccounts(cono,divi,rgdtDDMMYY,puno,pnli,pnls);
-              ait1_CACCST = inAccounts.get("AIT1").trim();
-              ait2_CACCST = inAccounts.get("AIT2").trim();
-              ait3_CACCST = inAccounts.get("AIT3").trim();
-              ait4_CACCST = inAccounts.get("AIT4").trim();
-              ait5_CACCST = inAccounts.get("AIT5").trim();
-              ait6_CACCST = inAccounts.get("AIT6").trim();
-              ait7_CACCST = inAccounts.get("AIT7").trim();
-              logger.debug("Inventory Accounted Item - ait1=" + ait1_CACCST + " ait2=" + ait2_CACCST);
+              ait1CACCST = inAccounts.get("AIT1").trim();
+              ait2CACCST = inAccounts.get("AIT2").trim();
+              ait3CACCST = inAccounts.get("AIT3").trim();
+              ait4CACCST = inAccounts.get("AIT4").trim();
+              ait5CACCST = inAccounts.get("AIT5").trim();
+              ait6CACCST = inAccounts.get("AIT6").trim();
+              ait7CACCST = inAccounts.get("AIT7").trim();
+              logger.debug("Inventory Accounted Item - ait1=" + ait1CACCST + " ait2=" + ait2CACCST);
             } 
             else {
               PROC = "";
               updateProcessFlag(divi, yea4, jrno, jsno, "2");
-              logger.debug("Item does not match criteria for account simulation - " + itno_MPLINE.trim());
+              logger.debug("Item does not match criteria for account simulation - " + itnoMPLINE.trim());
               return;
             }
           }
@@ -327,26 +323,26 @@ public class ProcessVariance extends ExtendM3Transaction {
     }
     //If CACCST is found, use the accounting string from there
     else {
-      ait1_CACCST = CACCST.get("SCAIT1").toString().trim();
-      ait2_CACCST = CACCST.get("SCAIT2").toString().trim();
-      ait3_CACCST = CACCST.get("SCAIT3").toString().trim();
-      ait4_CACCST = CACCST.get("SCAIT4").toString().trim();
-      ait5_CACCST = CACCST.get("SCAIT5").toString().trim();
-      ait6_CACCST = CACCST.get("SCAIT6").toString().trim();
-      ait7_CACCST = CACCST.get("SCAIT7").toString().trim();
-      logger.debug("ait1_CACCST=" + ait1_CACCST + " ait2_CACCST=" + ait2_CACCST);
+      ait1CACCST = CACCST.get("SCAIT1").toString().trim();
+      ait2CACCST = CACCST.get("SCAIT2").toString().trim();
+      ait3CACCST = CACCST.get("SCAIT3").toString().trim();
+      ait4CACCST = CACCST.get("SCAIT4").toString().trim();
+      ait5CACCST = CACCST.get("SCAIT5").toString().trim();
+      ait6CACCST = CACCST.get("SCAIT6").toString().trim();
+      ait7CACCST = CACCST.get("SCAIT7").toString().trim();
+      logger.debug("ait1CACCST=" + ait1CACCST + " ait2CACCST=" + ait2CACCST);
     }
 
-    String inbn = create_APS450MI_header(divi, yea4, vser, vono, acdt);
+    String inbn = createAPS450MIHeader(divi, yea4, vser, vono, acdt);
     if (inbn != null && !inbn.isEmpty()) {
       if (vtxt.length() == 40) {
         vtxt = vtxt.substring(0, 38) + "X";
       } else {
         vtxt = formatFixedLen(vtxt, 39) + "X";
       }
-      create_APS450MI_line(divi, inbn, (acam.toDouble() * (-1)).toString(), vtcd, (acqt.toDouble() * (-1)).toString(), ait1, ait2, ait3, ait4, ait5, ait6, ait7, vtxt);
-      create_APS450MI_line(divi, inbn, acam, vtcd, acqt, ait1_CACCST, ait2_CACCST, ait3_CACCST, ait4_CACCST, ait5_CACCST, ait6_CACCST, ait7_CACCST, vtxt);
-      validate_APS455MI_ValidByBatchNo(divi, inbn);
+      createAPS450MILine(divi, inbn, (acam.toDouble() * (-1)).toString(), vtcd, (acqt.toDouble() * (-1)).toString(), ait1, ait2, ait3, ait4, ait5, ait6, ait7, vtxt);
+      createAPS450MILine(divi, inbn, acam, vtcd, acqt, ait1CACCST, ait2CACCST, ait3CACCST, ait4CACCST, ait5CACCST, ait6CACCST, ait7CACCST, vtxt);
+      validateAPS455MIValidByBatchNo(divi, inbn);
       updateProcessFlag(divi, yea4, jrno, jsno, "1");
     }
   }
@@ -363,11 +359,11 @@ public class ProcessVariance extends ExtendM3Transaction {
     logger.debug("PUNO=" + puno + " PNLI=" + pnli);
   }
   /**
-   * create_APS450MI_header - executing APS450MI.AddHeadRecode
+   * createAPS450MIHeader - executing APS450MI.AddHeadRecode
    *
   */
-  def String create_APS450MI_header(String divi, String yea4, String vser, String vono, String acdt) {
-    logger.debug("Call APS450MI_AddHeadRecode...");
+  def String createAPS450MIHeader(String divi, String yea4, String vser, String vono, String acdt) {
+    logger.debug("Call APS450MI.AddHeadRecode...");
     
     String inbn = "";
     def params = [ "DIVI": divi, "YEA4": yea4, "VSER": vser, "VONO": vono, "ACDT": acdt]; 
@@ -383,10 +379,10 @@ public class ProcessVariance extends ExtendM3Transaction {
     return inbn;
   }
   /**
-   * create_APS450MI_line - executing APS450MI.AddLineRecode
+   * createAPS450MILine - executing APS450MI.AddLineRecode
    *
   */
-  def create_APS450MI_line(String divi, String inbn, String nlam, String vtcd, String acqt, String ait1, String ait2, String ait3, String ait4, String ait5, String ait6, String ait7, String vtxt) {
+  def createAPS450MILine(String divi, String inbn, String nlam, String vtcd, String acqt, String ait1, String ait2, String ait3, String ait4, String ait5, String ait6, String ait7, String vtxt) {
     logger.debug("Call APS450MI.AddLineRecode...");
     
     
@@ -411,10 +407,10 @@ public class ProcessVariance extends ExtendM3Transaction {
   }
   
   /**
-   * validate_APS455MI_Validate - executing APS455MI.ValidByBatchNo
+   * validateAPS455MIValidByBatchNo - executing APS455MI.ValidByBatchNo
    *
   */
-  def validate_APS455MI_ValidByBatchNo(String divi, String inbn) {
+  def validateAPS455MIValidByBatchNo(String divi, String inbn) {
     logger.debug("Call APS455MI.ValidByBatchNo...");
     def params = [ "DIVI": divi, "INBN": inbn]; 
     def callback = {
@@ -490,53 +486,53 @@ public class ProcessVariance extends ExtendM3Transaction {
     String AIT6 = "";
     String AIT7 = "";
     
-      def ResponseBody = content.toString();
-      int indexStart = ResponseBody.indexOf("AccountingDimension1>");
+      def responseBody = content.toString();
+      int indexStart = responseBody.indexOf("AccountingDimension1>");
       int indexEnd = 0;
       if (indexStart !=-1){
-         AIT1=ResponseBody.substring(indexStart+20);
+         AIT1=responseBody.substring(indexStart+20);
          indexEnd=AIT1.indexOf("<");
          AIT1=AIT1.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension2>");
+      indexStart = responseBody.indexOf("AccountingDimension2>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT2=ResponseBody.substring(indexStart+20);
+         AIT2=responseBody.substring(indexStart+20);
          indexEnd=AIT2.indexOf("<");
          AIT2=AIT2.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension3>");
+      indexStart = responseBody.indexOf("AccountingDimension3>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT3=ResponseBody.substring(indexStart+20);
+         AIT3=responseBody.substring(indexStart+20);
          indexEnd=AIT3.indexOf("<");
          AIT3=AIT3.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension4>");
+      indexStart = responseBody.indexOf("AccountingDimension4>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT4=ResponseBody.substring(indexStart+20);
+         AIT4=responseBody.substring(indexStart+20);
          indexEnd=AIT4.indexOf("<");
          AIT4=AIT4.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension5>");
+      indexStart = responseBody.indexOf("AccountingDimension5>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT5=ResponseBody.substring(indexStart+20);
+         AIT5=responseBody.substring(indexStart+20);
          indexEnd=AIT5.indexOf("<");
          AIT5=AIT5.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension6>");
+      indexStart = responseBody.indexOf("AccountingDimension6>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT6=ResponseBody.substring(indexStart+20);
+         AIT6=responseBody.substring(indexStart+20);
          indexEnd=AIT6.indexOf("<");
          AIT6=AIT6.substring(1,indexEnd);
       }
-            indexStart = ResponseBody.indexOf("AccountingDimension7>");
+      indexStart = responseBody.indexOf("AccountingDimension7>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT7=ResponseBody.substring(indexStart+20);
+         AIT7=responseBody.substring(indexStart+20);
          indexEnd=AIT7.indexOf("<");
          AIT7=AIT7.substring(1,indexEnd);
       }
@@ -583,53 +579,53 @@ public class ProcessVariance extends ExtendM3Transaction {
     String AIT6 = "";
     String AIT7 = "";
     
-      def ResponseBody = content.toString();
-      int indexStart = ResponseBody.indexOf("AccountingDimension1>");
+      def responseBody = content.toString();
+      int indexStart = responseBody.indexOf("AccountingDimension1>");
       int indexEnd = 0;
       if (indexStart !=-1){
-         AIT1=ResponseBody.substring(indexStart+20);
+         AIT1=responseBody.substring(indexStart+20);
          indexEnd=AIT1.indexOf("<");
          AIT1=AIT1.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension2>");
+      indexStart = responseBody.indexOf("AccountingDimension2>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT2=ResponseBody.substring(indexStart+20);
+         AIT2=responseBody.substring(indexStart+20);
          indexEnd=AIT2.indexOf("<");
          AIT2=AIT2.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension3>");
+      indexStart = responseBody.indexOf("AccountingDimension3>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT3=ResponseBody.substring(indexStart+20);
+         AIT3=responseBody.substring(indexStart+20);
          indexEnd=AIT3.indexOf("<");
          AIT3=AIT3.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension4>");
+      indexStart = responseBody.indexOf("AccountingDimension4>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT4=ResponseBody.substring(indexStart+20);
+         AIT4=responseBody.substring(indexStart+20);
          indexEnd=AIT4.indexOf("<");
          AIT4=AIT4.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension5>");
+      indexStart = responseBody.indexOf("AccountingDimension5>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT5=ResponseBody.substring(indexStart+20);
+         AIT5=responseBody.substring(indexStart+20);
          indexEnd=AIT5.indexOf("<");
          AIT5=AIT5.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension6>");
+      indexStart = responseBody.indexOf("AccountingDimension6>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT6=ResponseBody.substring(indexStart+20);
+         AIT6=responseBody.substring(indexStart+20);
          indexEnd=AIT6.indexOf("<");
          AIT6=AIT6.substring(1,indexEnd);
       }
-            indexStart = ResponseBody.indexOf("AccountingDimension7>");
+            indexStart = responseBody.indexOf("AccountingDimension7>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT7=ResponseBody.substring(indexStart+20);
+         AIT7=responseBody.substring(indexStart+20);
          indexEnd=AIT7.indexOf("<");
          AIT7=AIT7.substring(1,indexEnd);
       }
@@ -676,53 +672,53 @@ public class ProcessVariance extends ExtendM3Transaction {
     String AIT6 = "";
     String AIT7 = "";
     
-      def ResponseBody = content.toString();
-      int indexStart = ResponseBody.indexOf("AccountingDimension1>");
+      def responseBody = content.toString();
+      int indexStart = responseBody.indexOf("AccountingDimension1>");
       int indexEnd = 0;
       if (indexStart !=-1){
-         AIT1=ResponseBody.substring(indexStart+20);
+         AIT1=responseBody.substring(indexStart+20);
          indexEnd=AIT1.indexOf("<");
          AIT1=AIT1.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension2>");
+      indexStart = responseBody.indexOf("AccountingDimension2>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT2=ResponseBody.substring(indexStart+20);
+         AIT2=responseBody.substring(indexStart+20);
          indexEnd=AIT2.indexOf("<");
          AIT2=AIT2.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension3>");
+      indexStart = responseBody.indexOf("AccountingDimension3>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT3=ResponseBody.substring(indexStart+20);
+         AIT3=responseBody.substring(indexStart+20);
          indexEnd=AIT3.indexOf("<");
          AIT3=AIT3.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension4>");
+      indexStart = responseBody.indexOf("AccountingDimension4>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT4=ResponseBody.substring(indexStart+20);
+         AIT4=responseBody.substring(indexStart+20);
          indexEnd=AIT4.indexOf("<");
          AIT4=AIT4.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension5>");
+      indexStart = responseBody.indexOf("AccountingDimension5>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT5=ResponseBody.substring(indexStart+20);
+         AIT5=responseBody.substring(indexStart+20);
          indexEnd=AIT5.indexOf("<");
          AIT5=AIT5.substring(1,indexEnd);
       }
-      indexStart = ResponseBody.indexOf("AccountingDimension6>");
+      indexStart = responseBody.indexOf("AccountingDimension6>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT6=ResponseBody.substring(indexStart+20);
+         AIT6=responseBody.substring(indexStart+20);
          indexEnd=AIT6.indexOf("<");
          AIT6=AIT6.substring(1,indexEnd);
       }
-            indexStart = ResponseBody.indexOf("AccountingDimension7>");
+            indexStart = responseBody.indexOf("AccountingDimension7>");
       indexEnd = 0;
       if (indexStart !=-1){
-         AIT7=ResponseBody.substring(indexStart+20);
+         AIT7=responseBody.substring(indexStart+20);
          indexEnd=AIT7.indexOf("<");
          AIT7=AIT7.substring(1,indexEnd);
       }
