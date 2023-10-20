@@ -165,8 +165,7 @@ public class Add extends ExtendM3Transaction {
       MPOPLP.set("POPLPN", puno.toInteger());
       MPOPLP.set("POPLPS", pnli.toInteger());
       MPOPLP.set("POPLP2", pnls.toInteger());
-      queryMPOPLP.readAll(MPOPLP, 4, 1, lstMPOPLP);
-      if (!found) {
+      if (!queryMPOPLP.read(MPOPLP)) {
         mi.error("PO line number or Proposal number invalid");
         return;
       }
@@ -262,14 +261,5 @@ public class Add extends ExtendM3Transaction {
   Closure recordExists = {
 	  mi.error("Record already exists");
   }
-  
-  /**
-   * lstMPOPLP - Callback function to verify whether MPOPLP transaction found
-   *
-  */
-  Closure<?> lstMPOPLP = { DBContainer MPOPLP ->
-    found = true;
-  }
-  
   
 }
