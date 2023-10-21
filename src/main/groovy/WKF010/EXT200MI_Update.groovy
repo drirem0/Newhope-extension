@@ -147,8 +147,7 @@
         MPOPLP.set("POPLPN", puno.toInteger());
         MPOPLP.set("POPLPS", pnli.toInteger());
         MPOPLP.set("POPLP2", pnls.toInteger());
-        queryMPOPLP.readAll(MPOPLP, 4, 1, lstMPOPLP);  	    
-        if (!found) {
+      if (!queryMPOPLP.read(MPOPLP)) {        
           mi.error("PO number or Proposal number invalid");
           return;
         }
@@ -208,15 +207,6 @@
     }
   }
   
-  /**
-   * lstMPOPLP - Callback function to verify whether MPOPLP transaction found
-   *
-   */
-   
-    Closure<?> lstMPOPLP = { DBContainer MPOPLP ->
-    found = true;
-  }
-   
   /**
    * updateCallBack - Callback function to update EXTAPR table
    *
