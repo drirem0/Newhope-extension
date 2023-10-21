@@ -79,6 +79,7 @@ public class AddWOPart extends ExtendM3Transaction {
 
 	private int iLINO;
 	private boolean isPOPNValid;
+	private boolean isDateParsed;
 
 	public AddWOPart(MIAPI mi, DatabaseAPI database, MICallerAPI miCaller, LoggerAPI logger, ProgramAPI program) {
 		this.mi = mi;
@@ -339,19 +340,21 @@ public class AddWOPart extends ExtendM3Transaction {
 			mi.error("Warehouse is invalid.");
 			return false;
 		}
+		isDateParsed = false;
 		if (!zzdt.isEmpty()) {
 			if(zzdt.length() != 8 ){
 				mi.error("Date length must be 8");
 				return false;
 			}
-
 			try {
-				LocalDate.parse(zzdt, DateTimeFormatter.ofPattern("yyyyMMdd"))
+				isDateParsed = LocalDate.parse(zzdt, DateTimeFormatter.ofPattern("yyyyMMdd"))
 			} catch (DateTimeParseException e) {
 				mi.error("Incorrect date format yyyyMMdd");
 				return false;
 			}
-
+		}
+		if(!isDateParsed){
+			zzdt = "0";
 		}
 		return true;
 	}
@@ -419,11 +422,9 @@ public class AddWOPart extends ExtendM3Transaction {
 	   EXTMAT.set("EXLMDT", currentDate);
 	   EXTMAT.set("EXCHNO", 0);
 	   EXTMAT.set("EXCHID", program.getUser());
-	   if (!zzdt.isEmpty()) {
-		   EXTMAT.set("EXZZDT", zzdt.toInteger());
-	   } else {
-		   EXTMAT.set("EXZZDT", 0);
-	   }
+		if (!zzdt.isEmpty()) {
+			EXTMAT.set("EXZZDT", zzdt.toInteger());
+		 }
 	   EXTMAT.set("EXITTY", itty);
 	   EXTMAT.set("EXPOP2", pop2);
 	   if(txid != ""){
