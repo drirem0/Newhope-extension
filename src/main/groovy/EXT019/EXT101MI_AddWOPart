@@ -26,14 +26,16 @@ import groovy.lang.Closure
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException
 import java.time.ZoneId;
-import java.text.SimpleDateFormat;
+
 
 /*
 *Modification area - M3
 *Nbr               Date      User id     Description
 *EXT019            20230322  WZHAO       Work Order Integrated with Parts Portal 
 *EXT019            20231005  RMURRAY     Added item type, planning date, updated field, validation
+*EXT019				 20231021  RMURRAY     Changed date format validation for zzdt.
 */
 
 /*
@@ -70,9 +72,6 @@ public class AddWOPart extends ExtendM3Transaction {
 	private String pop2;
 	private String txid;
 	private String ztxt;
-
-	private SimpleDateFormat yyyMMddFormat = new SimpleDateFormat("yyyyMMdd");
-	private String parsedDate;
 
 	private int XXCONO;
 	private int currentDate;
@@ -346,14 +345,13 @@ public class AddWOPart extends ExtendM3Transaction {
 				return false;
 			}
 
-			try{
-				parsedDate = yyyMMddFormat.parse(zzdt);
-			} finally {
-				if(parsedDate == null){
-  				mi.error("Incorrect date format yyyyMMdd");
-  				return false;
-  				}  
+			try {
+				LocalDate.parse(zzdt, DateTimeFormatter.ofPattern("yyyyMMdd"))
+			} catch (DateTimeParseException e) {
+				mi.error("Incorrect date format yyyyMMdd");
+				return false;
 			}
+
 		}
 		return true;
 	}

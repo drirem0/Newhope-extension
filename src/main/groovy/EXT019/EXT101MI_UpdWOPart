@@ -26,13 +26,14 @@
  import java.time.LocalDate;
  import java.time.LocalDateTime;
  import java.time.format.DateTimeFormatter;
+ import java.time.format.DateTimeParseException
  import java.time.ZoneId;
- import java.text.SimpleDateFormat;
  
  /*
  *Modification area - M3
  *Nbr               Date      User id     Description
  *EXT019            20230322  WZHAO       Work Order Integrated with Parts Portal 
+ *EXT019				    20231021  RMURRAY     Changed date format validation for zzdt.
  *                                        
  */
  
@@ -61,9 +62,6 @@ public class UpdWOPart extends ExtendM3Transaction {
   private String pop2;
   private String txid;
   private String ztxt;
-  
-  private SimpleDateFormat yyyMMddFormat = new SimpleDateFormat("yyyyMMdd");
-  private String parsedDate;
   
   private int XXCONO;
   private int currentDate;
@@ -195,14 +193,11 @@ public class UpdWOPart extends ExtendM3Transaction {
 				mi.error("Date length must be 8");
 				return false;
 			}
-
-			try{
-				parsedDate = yyyMMddFormat.parse(zzdt);
-			} finally {
-				if(parsedDate == null){
-  				mi.error("Incorrect date format yyyyMMdd");
-  				return false;
-  				}  
+			try {
+			  LocalDate.parse(zzdt, DateTimeFormatter.ofPattern("yyyyMMdd"))
+      } catch (DateTimeParseException e) {
+  		  mi.error("Incorrect date format yyyyMMdd");
+			  return false;
 			}
 		}
   	DBAction queryMMOHED = database.table("MMOHED").index("00").selection("QHWHST").build();
