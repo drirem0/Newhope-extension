@@ -35,6 +35,7 @@
  *Nbr               Date      User id     Description
  *EXT019            20230322  WZHAO       Work Order Integrated with Parts Portal 
  *EXT019            20231025  RUSSELM     Added GetPrice call, and removed records which are not active/existing in MITBAL
+ *EXT019            20231025  RUSSELM     Changing all variables to use camelCase.
  */
  
   /*
@@ -60,18 +61,19 @@ public class SearchItem extends ExtendM3Transaction {
   private int currentDate;
   private int currentTime
   
-  private List lstMMS200MI_SearchItem;
-  private List lstMDBREADMI_LstMITPOP60;
-  private List lstMDBREADMI_LstMITVEN10;
+  private List lstMMS200MISearchItem;
+  private List lstMDBREADMILstMITPOP60;
+  private List lstMDBREADMILstMITVEN10;
   private List lstValidItems;
   
   private String itno;
   private String itds;
   private String fuds;
-  private String suno_MITBAL;
   private String aval;
   private String popn;
   private String pldt;
+  private String sunoMITBAL;
+  private String whloMITBAL;
   
   private List lstMITVEN;
   
@@ -115,7 +117,7 @@ public class SearchItem extends ExtendM3Transaction {
     lstValidItems = new ArrayList();
     // Search on item master
     if (type.toInteger() == 1) {
-      lstMMS200MI_SearchItem = new ArrayList();
+      lstMMS200MISearchItem = new ArrayList();
       String sqry = "";
       if (wild.toInteger() == 1) {
         sqry = "STAT:[20 TO 50] (ITDS:*" + sstr + "* OR ITNO:*" + sstr + "*)";
@@ -130,21 +132,21 @@ public class SearchItem extends ExtendM3Transaction {
           String itds = response.ITDS;
           String fuds = response.FUDS;
           def map = [ITNO: itno, ITDS: itds, FUDS: fuds];
-          lstMMS200MI_SearchItem.add(map);
+          lstMMS200MISearchItem.add(map);
         }
       }
       miCaller.call("MMS200MI","SearchItem", params, callback);
-      logger.debug("lstMMS200MI_SearchItem.size()=" + lstMMS200MI_SearchItem.size());
-      if (lstMMS200MI_SearchItem.size() <= 0) {
+      logger.debug("lstMMS200MISearchItem.size()=" + lstMMS200MISearchItem.size());
+      if (lstMMS200MISearchItem.size() <= 0) {
         sqry = "STAT:[20 TO 50] (ITNO:*" + sstr + "* OR ITNO:" + sstr + ")";
         params = [ "SQRY": sqry];
         miCaller.call("MMS200MI","SearchItem", params, callback);
       }
-      if (lstMMS200MI_SearchItem.size() > 0) {
-        getStocksAndSupplierItem(lstMMS200MI_SearchItem);
+      if (lstMMS200MISearchItem.size() > 0) {
+        getStocksAndSupplierItem(lstMMS200MISearchItem);
       }
     } else if (type.toInteger() == 2) {
-      lstMDBREADMI_LstMITPOP60 = new ArrayList();
+      lstMDBREADMILstMITPOP60 = new ArrayList();
       String sqry = "";
       String url = "";
       Map<String,String> params;
@@ -193,16 +195,16 @@ public class SearchItem extends ExtendM3Transaction {
             }
             if (ok) {
               def map = [ITNO: itno, POPN: popn, E0PA: e0pa];
-              lstMDBREADMI_LstMITPOP60.add(map);
+              lstMDBREADMILstMITPOP60.add(map);
             }
           }
         }
-        if (lstMDBREADMI_LstMITPOP60.size() > 0) {
-          getStocksAndSupplierItem(lstMDBREADMI_LstMITPOP60);
+        if (lstMDBREADMILstMITPOP60.size() > 0) {
+          getStocksAndSupplierItem(lstMDBREADMILstMITPOP60);
         }
       }
     } else if (type.toInteger() == 3) {
-      lstMDBREADMI_LstMITVEN10 = new ArrayList();
+      lstMDBREADMILstMITVEN10 = new ArrayList();
       Map<String,String> headers = ["Accept": "application/json"];
       Map<String,String> params = [ "SUNO":sstr];
       String url = "/M3/m3api-rest/v2/execute/MDBREADMI/LstMITVEN10";
@@ -222,11 +224,11 @@ public class SearchItem extends ExtendM3Transaction {
             String ppun = recordMITVEN.PPUN;
             String pupr = recordMITVEN.PUPR.trim().toDouble().toString();
             def map = [SUNO: suno, ITNO: itno, PPUN: ppun, PUPR: pupr];
-            lstMDBREADMI_LstMITVEN10.add(map);
+            lstMDBREADMILstMITVEN10.add(map);
           }
         }
-        if (lstMDBREADMI_LstMITVEN10.size() > 0) {
-          getStocksAndSupplierItem(lstMDBREADMI_LstMITVEN10);
+        if (lstMDBREADMILstMITVEN10.size() > 0) {
+          getStocksAndSupplierItem(lstMDBREADMILstMITVEN10);
         }
       }
     }
@@ -339,14 +341,15 @@ public class SearchItem extends ExtendM3Transaction {
       
 		  String stqt = "";
     	String alqt = "";
-    	aval = "";
-    	suno_MITBAL = "";
     	String whsl = "";
     	String reop = "";
     	String mxst = "";
     	String orqt = "";
       String leat = "";
-      String mitbalWHLO = "";
+
+    	aval = "";
+    	sunoMITBAL = "";
+      whloMITBAL = "";
         
     	DBAction queryMITBAL = database.table("MITBAL").index("00").selection("MBSTQT", "MBALQT", "MBSUNO", "MBWHSL", "MBREOP", "MBMXST", "MBORQT","MBLEAT", "MBWHLO").build();
       DBContainer MITBAL = queryMITBAL.getContainer();
@@ -357,19 +360,19 @@ public class SearchItem extends ExtendM3Transaction {
         stqt = MITBAL.get("MBSTQT").toString().trim();
         alqt = MITBAL.get("MBALQT").toString().trim();
         aval = (stqt.toDouble() - alqt.toDouble()).toString();
-        suno_MITBAL = MITBAL.get("MBSUNO").toString().trim();
+        sunoMITBAL = MITBAL.get("MBSUNO").toString().trim();
         whsl = MITBAL.get("MBWHSL").toString().trim();
         reop = MITBAL.get("MBREOP").toString().trim();
         mxst = MITBAL.get("MBMXST").toString().trim();
         orqt = MITBAL.get("MBORQT").toString().trim();
         leat = MITBAL.get("MBLEAT").toString().trim();
-        mitbalWHLO = MITBAL.get("MBWHLO").toString().trim()
+        whloMITBAL = MITBAL.get("MBWHLO").toString().trim()
         if(leat == null || leat == "" || leat == "0"){
           leat = "1";
         }
       } 
       
-      if(mitbalWHLO == null || mitbalWHLO.size() == 0){
+      if(whloMITBAL == null || whloMITBAL.size() == 0){
         continue;
       }
       
@@ -413,7 +416,7 @@ public class SearchItem extends ExtendM3Transaction {
         } else if (lstMITVEN.size() > 1) {
           for (int j=0;j<lstMITVEN.size();j++) {
             Map<String, String> record2 = (Map<String, String>) lstMITVEN[j];
-            if (record2.SUNO.equals(suno_MITBAL)) {
+            if (record2.SUNO.equals(sunoMITBAL)) {
               suno = record2.SUNO;
               pupr = record2.PUPR.trim().toDouble().toString();
               ppun = record2.PPUN; 
@@ -478,7 +481,7 @@ public class SearchItem extends ExtendM3Transaction {
       }
       
 
-      def map = [ITNO: itno, ITDS: itds, FUDS: fuds, UNMS: unms, STCD: stcd, AVAL: aval, WHSL: whsl, REOP: reop, MXST: mxst, ORQT: orqt, POPN: popn, PLDT: pldt, SUNO: suno, PUPR: pupr, PPUN: ppun, ITTY: itty, LEAT: leat, WDNO: wdno, LEDT: ledt, WHLO: mitbalWHLO];
+      def map = [ITNO: itno, ITDS: itds, FUDS: fuds, UNMS: unms, STCD: stcd, AVAL: aval, WHSL: whsl, REOP: reop, MXST: mxst, ORQT: orqt, POPN: popn, PLDT: pldt, SUNO: suno, PUPR: pupr, PPUN: ppun, ITTY: itty, LEAT: leat, WDNO: wdno, LEDT: ledt, WHLO: whloMITBAL];
       lstValidItems.add(map);
     }
   }
