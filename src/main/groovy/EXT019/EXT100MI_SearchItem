@@ -34,7 +34,7 @@
  *Modification area - M3
  *Nbr               Date      User id     Description
  *EXT019            20230322  WZHAO       Work Order Integrated with Parts Portal 
- *
+ *EXT019            20231025  RUSSELM     Added GetPrice call, and removed records which are not active/existing in MITBAL
  */
  
   /*
@@ -369,6 +369,10 @@ public class SearchItem extends ExtendM3Transaction {
         }
       } 
       
+      if(mitbalWHLO == null || mitbalWHLO.size() == 0){
+        continue;
+      }
+      
       popn = "";
       DBAction queryMITPOP = database.table("MITPOP").index("00").selection("MPPOPN").build();
       DBContainer MITPOP = queryMITPOP.getContainer();
@@ -446,11 +450,34 @@ public class SearchItem extends ExtendM3Transaction {
         	      if (recordCSYCAL.CDYMD8 != null) {
         	        ledt = recordCSYCAL.CDYMD8;
                 }
-              }
             }
           }
         }
-     
+      }
+      /*
+       * Get price from simulation
+       */
+      if(suno != null && suno != ""){
+        Map<String,String> headersPPS106MI = ["Accept": "application/json"];
+        Map<String,String> paramsPPS106MI = ["CONO": XXCONO.toString().trim(), "ITNO": itno, "ORQA": "1", "DWDT": currentDate.toString().trim(), "SUNO": suno ];
+        
+        String urlPPS106MI = "/M3/m3api-rest/v2/execute/PPS106MI/GetPrice";
+        IonResponse response = ion.get(urlPPS106MI, headersPPS106MI, paramsPPS106MI);
+        if (response.getStatusCode() == 200) {
+          JsonSlurper jsonSlurper = new JsonSlurper();
+          Map<String, Object> miResponse = (Map<String, Object>) jsonSlurper.parseText(response.getContent());
+          ArrayList<Map<String, Object>> results = (ArrayList<Map<String, Object>>) miResponse.get("results");
+          ArrayList<Map<String, String>> recordList = (ArrayList<Map<String, String>>) results[0]["records"];
+          recordList.eachWithIndex { it, index ->
+            Map<String, String> recordPPS106MI = (Map<String, String>) it;
+            if (recordPPS106MI.PUPR != null) {
+              pupr = recordPPS106MI.PUPR;
+            }
+          }
+        }
+      }
+      
+
       def map = [ITNO: itno, ITDS: itds, FUDS: fuds, UNMS: unms, STCD: stcd, AVAL: aval, WHSL: whsl, REOP: reop, MXST: mxst, ORQT: orqt, POPN: popn, PLDT: pldt, SUNO: suno, PUPR: pupr, PPUN: ppun, ITTY: itty, LEAT: leat, WDNO: wdno, LEDT: ledt, WHLO: mitbalWHLO];
       lstValidItems.add(map);
     }
